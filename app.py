@@ -22,13 +22,23 @@ FFMPEG_DIR = os.path.join(PROJECT_ROOT, 'ffmpeg')
 os.makedirs(DOWNLOADS_DIR, exist_ok=True)
 os.makedirs(FFMPEG_DIR, exist_ok=True)
 
-# Add local tools (FFmpeg & Deno) to PATH
+# Write cookies from environment variable if provided on cloud hosts (Render/Railway)
+ENV_COOKIES = os.environ.get('YOUTUBE_COOKIES', '').strip()
+if ENV_COOKIES and not os.path.isfile(COOKIES_FILE):
+    try:
+        with open(COOKIES_FILE, 'w', encoding='utf-8') as f:
+            f.write(ENV_COOKIES)
+        print("[Auth] Created cookies.txt from YOUTUBE_COOKIES environment variable.")
+    except Exception as e:
+        print(f"[Auth Error] Could not write cookies file: {e}")
+
+# Add local tools (FFmpeg & Deno) to PATH if present
 if os.path.exists(FFMPEG_DIR):
     os.environ["PATH"] = FFMPEG_DIR + os.pathsep + os.environ.get("PATH", "")
     print(f"[Engine] Bundled tools (FFmpeg & Deno) active from: {FFMPEG_DIR}")
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR)
-app.secret_key = 'bluestream_pro_secret_key_v9'
+app.secret_key = 'bluestream_pro_secret_key_v10'
 CORS(app)
 
 progress_data = {}
@@ -105,7 +115,7 @@ def get_base_ydl_opts():
         'remote_components': ['ejs:github'],
         'extractor_args': {
             'youtube': {
-                'player_client': ['web_embedded', 'android'],
+                'player_client': ['ios', 'android', 'web_embedded', 'mweb'],
             }
         },
     }
@@ -235,7 +245,7 @@ def download():
         os.makedirs(task_dir, exist_ok=True)
         trim_stop_event = threading.Event()
 
-        # Dynamic progress animator for trimming (so UI updates continuously)
+        # Dynamic progress animator for trimming
         def trim_progress_animator():
             stages = [
                 (25.0, "✂️ Direct streaming requested section...", "A few seconds"),
@@ -320,7 +330,7 @@ def download():
                 'windowsfilenames': True,
             })
 
-            # Stream ONLY requested section (lossless stream copy for ultra-fast slicing!)
+            # Stream ONLY requested section
             if is_trimmed:
                 def section_picker(info_dict, ydl_instance):
                     start = start_sec if start_sec is not None else 0
@@ -421,7 +431,6 @@ def file_download(task_id):
             download_name=file_info.get('filename', os.path.basename(filepath))
         )
         
-        # Cleanup temporary task folder after stream finishes
         if file_info.get('task_dir'):
             @response.call_on_close
             def cleanup():
@@ -439,12 +448,13 @@ def file_download(task_id):
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
     local_ip = get_local_ip()
     print("=" * 65)
-    print("      🌟 BLUESTREAM PRO V9 - TRUE 4K & HIGH RESOLUTION ONLINE")
-    print(f"  [+] Local Web Access:    http://localhost:5000")
-    print(f"  [+] Mobile Wi-Fi Access: http://{local_ip}:5000")
-    print(f"  [+] True 4K Engine:      ACTIVE (Web Embedded + Deno)")
+    print("      🌟 BLUESTREAM PRO V10 - 4K MEDIA & SLICE ENGINE ONLINE")
+    print(f"  [+] Local Web Access:    http://localhost:{port}")
+    print(f"  [+] Mobile Wi-Fi Access: http://{local_ip}:{port}")
+    print(f"  [+] True 4K Engine:      ACTIVE (Multi-Client Bypass)")
     print(f"  [+] Fast Lossless Cut:   ACTIVE (Lossless Stream Copy)")
     print("=" * 65)
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=False)
