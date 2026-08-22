@@ -1,0 +1,12 @@
+# Virtual Environment (do NOT upload to GitHub)
+venv/
+env/
+.env
+
+# Temporary Downloads & Cache
+downloads/
+__pycache__/
+*.pyc
+
+# Local binary folder (cloud host installs its own Linux FFmpeg)
+ffmpeg/

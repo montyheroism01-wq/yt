@@ -1,0 +1,12 @@
+flask>=2.3.0
+flask-cors>=4.0.0
+yt-dlp>=2024.7.0
+yt-dlp-ejs>=0.8.0
+curl-cffi>=0.7.0
+quickjs>=1.19.4
+py_mini_racer>=0.6.0
+requests>=2.31.0
+mutagen>=1.47.0
+urllib3>=2.0.0
+brotli>=1.1.0
+websockets>=12.0
