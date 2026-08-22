@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BLUESTREAM MATRIX • Cyber 4K Media & Trimmer Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Orbitron:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --matrix-green: #00ff66;
+            --matrix-dark-green: #008f39;
+            --matrix-cyan: #00f0ff;
+            --matrix-pink: #ff007f;
+            --matrix-amber: #ffb703;
+            --matrix-bg: #020b05;
+            --glass-card: rgba(2, 18, 9, 0.88);
+            --glass-border: rgba(0, 255, 102, 0.35);
+            --text-main: #f0fff4;
+            --text-dim: #719b80;
+            --glow-green: rgba(0, 255, 102, 0.4);
+            --glow-cyan: rgba(0, 240, 255, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--matrix-bg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            position: relative;
+            padding: 1.5rem 1rem;
+        }
+
+        /* Matrix Code Rain Canvas */
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.9;
+        }
+
+        /* Scanline Overlay Effect */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Vignette Ambient */
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.85) 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Master Cyber Terminal Container */
+        .cyber-terminal {
+            width: 100%;
+            max-width: 760px;
+            background: var(--glass-card);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.2rem;
+            box-shadow: 0 0 50px rgba(0, 255, 102, 0.15), 0 25px 60px rgba(0, 0, 0, 0.9);
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 1.4rem;
+            animation: terminalEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes terminalEntry {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .cyber-terminal::before, .cyber-terminal::after {
+            content: '[ + ]';
+            position: absolute;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.65rem;
+            color: var(--matrix-green);
+            opacity: 0.6;
+            letter-spacing: 2px;
+        }
+        .cyber-terminal::before { top: 12px; left: 16px; }
+        .cyber-terminal::after { top: 12px; right: 16px; }
+
+        /* Terminal Header */
+        .terminal-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 6px;
+        }
+
+        .header-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .terminal-badge {
+            width: 38px;
+            height: 38px;
+            background: rgba(0, 255, 102, 0.12);
+            border: 1.5px solid var(--matrix-green);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 0 15px var(--glow-green);
+            color: var(--matrix-green);
+        }
+
+        .main-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.1rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #ffffff 20%, var(--matrix-green) 80%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 25px rgba(0, 255, 102, 0.4);
+        }
+
+        .terminal-sub {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+
+        .telemetry-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .telemetry-pill {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(0, 255, 102, 0.08);
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            color: var(--matrix-green);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .telemetry-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--matrix-green);
+            box-shadow: 0 0 8px var(--matrix-green);
+            animation: blink 1.2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.7); }
+        }
+
+        /* Matrix Search Input */
+        .search-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-prompt {
+            position: absolute;
+            left: 16px;
+            font-family: 'Fira Code', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--matrix-green);
+            pointer-events: none;
+        }
+
+        .matrix-input {
+            width: 100%;
+            padding: 16px 110px 16px 42px;
+            background: rgba(1, 10, 5, 0.85);
+            border: 2px solid rgba(0, 255, 102, 0.3);
+            border-radius: 14px;
+            color: var(--matrix-green);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.92rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .matrix-input:focus {
+            border-color: var(--matrix-green);
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.35);
+            background: rgba(0, 15, 7, 0.95);
+        }
+
+        .input-tools {
+            position: absolute;
+            right: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-paste {
+            background: rgba(0, 255, 102, 0.15);
+            border: 1px solid var(--matrix-green);
+            color: var(--matrix-green);
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-paste:hover {
+            background: var(--matrix-green);
+            color: #000;
+            box-shadow: 0 0 15px var(--matrix-green);
+        }
+
+        .matrix-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 255, 102, 0.2);
+            border-top-color: var(--matrix-green);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Media Hologram Card */
+        .media-hologram {
+            display: none;
+            background: rgba(1, 14, 7, 0.85);
+            border: 1px solid rgba(0, 255, 102, 0.35);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            animation: hologramEntry 0.4s ease forwards;
+        }
+
+        .media-hologram.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes hologramEntry {
+            from { opacity: 0; transform: scale(0.97); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .thumb-box {
+            position: relative;
+            width: 100%;
+            height: 190px;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .thumb-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.9;
+            transition: transform 0.4s;
+        }
+
+        .thumb-box:hover .thumb-img {
+            transform: scale(1.03);
+            opacity: 1;
+        }
+
+        .playlist-pill {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: linear-gradient(90deg, var(--matrix-pink), var(--matrix-cyan));
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.6);
+            display: none;
+        }
+
+        .duration-hud {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid var(--matrix-green);
+            color: var(--matrix-green);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            font-weight: bold;
+        }
+
+        .hologram-info {
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .video-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .video-creator {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            color: var(--text-dim);
+        }
+
+        /* ✂️ BRAND NEW MATRIX CYBER TRIMMER STUDIO */
+        .cyber-studio-deck {
+            display: none;
+            background: rgba(0, 15, 6, 0.92);
+            border: 1.5px solid var(--matrix-cyan);
+            border-radius: 20px;
+            padding: 1.4rem;
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.2);
+            flex-direction: column;
+            gap: 1.2rem;
+            animation: hologramEntry 0.4s ease;
+            position: relative;
+        }
+
+        .cyber-studio-deck.active {
+            display: flex;
+        }
+
+        .studio-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .studio-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--matrix-cyan);
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .switch-clip-mode {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            cursor: pointer;
+        }
+
+        .clip-toggle-switch {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--matrix-cyan);
+        }
+
+        /* Studio Interactive Timeline & Soundwave Track */
+        .soundwave-timeline-container {
+            position: relative;
+            width: 100%;
+            height: 60px;
+            background: rgba(0, 5, 2, 0.95);
+            border: 1.5px solid rgba(0, 240, 255, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Soundwave tick pattern backdrop */
+        .soundwave-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .wave-bar {
+            width: 2px;
+            background: var(--matrix-cyan);
+            border-radius: 2px;
+        }
+
+        .active-slice-hud {
+            position: absolute;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.25), rgba(0, 255, 102, 0.25));
+            border-left: 2px solid var(--matrix-cyan);
+            border-right: 2px solid var(--matrix-green);
+            left: 0%;
+            width: 100%;
+            pointer-events: none;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        /* Dual Range Slider Overlays */
+        .range-scrubber-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent;
+            margin: 0;
+            z-index: 5;
+        }
+
+        .range-scrubber-input::-webkit-slider-thumb {
+            pointer-events: all;
+            appearance: none;
+            -webkit-appearance: none;
+            width: 26px;
+            height: 60px;
+            background: rgba(0, 240, 255, 0.25);
+            border: 2px solid var(--matrix-cyan);
+            border-radius: 6px;
+            cursor: ew-resize;
+            box-shadow: 0 0 15px var(--matrix-cyan);
+            backdrop-filter: blur(4px);
+            transition: all 0.15s;
+        }
+
+        .range-scrubber-input::-webkit-slider-thumb:hover {
+            background: rgba(0, 240, 255, 0.5);
+            border-color: #fff;
+            transform: scaleY(1.06);
+        }
+
+        #rangeStart::-webkit-slider-thumb {
+            border-color: var(--matrix-cyan);
+            box-shadow: 0 0 15px var(--matrix-cyan);
+        }
+
+        #rangeEnd::-webkit-slider-thumb {
+            border-color: var(--matrix-green);
+            box-shadow: 0 0 15px var(--matrix-green);
+        }
+
+        /* Quick Preset Buttons */
+        .preset-pills-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .btn-preset {
+            background: rgba(0, 240, 255, 0.08);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            color: var(--matrix-cyan);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-preset:hover {
+            background: var(--matrix-cyan);
+            color: #000;
+            box-shadow: 0 0 15px var(--matrix-cyan);
+        }
+
+        /* Precision Digital Readouts & Micro-Adjusters */
+        .studio-control-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .precision-card {
+            background: rgba(0, 10, 4, 0.9);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .precision-card.end-card {
+            border-color: rgba(0, 255, 102, 0.25);
+        }
+
+        .card-meta-label {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .digital-clock-field {
+            background: transparent;
+            border: none;
+            color: var(--matrix-cyan);
+            font-family: 'Fira Code', monospace;
+            font-size: 1.25rem;
+            font-weight: 800;
+            outline: none;
+            width: 100%;
+            text-align: center;
+            background: rgba(0, 240, 255, 0.05);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .end-card .digital-clock-field {
+            color: var(--matrix-green);
+            background: rgba(0, 255, 102, 0.05);
+        }
+
+        .micro-steps-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+
+        .btn-micro {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 4px 0;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.68rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-micro:hover {
+            background: var(--matrix-cyan);
+            color: #000;
+            border-color: var(--matrix-cyan);
+        }
+
+        .end-card .btn-micro:hover {
+            background: var(--matrix-green);
+            color: #000;
+            border-color: var(--matrix-green);
+        }
+
+        /* Duration & Savings HUD Meter */
+        .studio-savings-meter {
+            background: rgba(0, 255, 102, 0.08);
+            border: 1px solid var(--matrix-green);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--matrix-green);
+        }
+
+        /* Mode Switcher & Quality Controls */
+        .control-matrix {
+            background: rgba(0, 12, 5, 0.7);
+            border: 1px solid rgba(0, 255, 102, 0.2);
+            border-radius: 16px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .matrix-mode-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 4px;
+            border: 1px solid rgba(0, 255, 102, 0.2);
+        }
+
+        .matrix-tab {
+            padding: 9px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .matrix-tab.active {
+            background: var(--matrix-green);
+            color: #000;
+            box-shadow: 0 0 15px var(--glow-green);
+        }
+
+        .matrix-tab.active.audio-mode {
+            background: linear-gradient(135deg, var(--matrix-pink), var(--matrix-cyan));
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.4);
+        }
+
+        .quality-hud-select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            color: var(--matrix-green);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Master Launch Button */
+        .btn-matrix-launch {
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            opacity: 0.4;
+            pointer-events: none;
+            background: #112217;
+            color: var(--text-dim);
+        }
+
+        .btn-matrix-launch.ready {
+            opacity: 1;
+            pointer-events: all;
+            background: linear-gradient(135deg, var(--matrix-green) 0%, var(--matrix-cyan) 100%);
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.4);
+        }
+
+        .btn-matrix-launch.ready:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 45px rgba(0, 255, 102, 0.6);
+            filter: brightness(1.1);
+        }
+
+        .btn-matrix-launch.audio-mode {
+            background: linear-gradient(135deg, var(--matrix-pink), var(--matrix-cyan));
+            color: #fff;
+            box-shadow: 0 0 30px rgba(255, 0, 127, 0.4);
+        }
+
+        /* Laser Progress HUD */
+        .progress-matrix-hud {
+            display: none;
+            background: rgba(0, 15, 6, 0.95);
+            border: 1px solid var(--matrix-green);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: 0 0 35px rgba(0, 255, 102, 0.2);
+            flex-direction: column;
+            gap: 10px;
+            animation: hologramEntry 0.4s ease;
+        }
+
+        .progress-matrix-hud.active {
+            display: flex;
+        }
+
+        .hud-status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hud-status-text {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--matrix-green);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 75%;
+        }
+
+        .hud-pct-text {
+            font-family: 'Fira Code', monospace;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .laser-track {
+            width: 100%;
+            height: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            position: relative;
+        }
+
+        .laser-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--matrix-dark-green), var(--matrix-green), var(--matrix-cyan));
+            border-radius: 10px;
+            transition: width 0.25s ease;
+            box-shadow: 0 0 15px var(--matrix-green);
+        }
+
+        .hud-telemetry-stats {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .direct-save-btn {
+            display: none;
+            background: linear-gradient(135deg, var(--matrix-green), var(--matrix-cyan));
+            color: #000;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.4);
+            animation: pulseBtn 1.5s infinite;
+        }
+
+        @keyframes pulseBtn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* Toast Notifications */
+        .matrix-toast {
+            position: fixed;
+            bottom: 25px;
+            background: #011408;
+            border: 1px solid var(--matrix-green);
+            color: var(--matrix-green);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            font-weight: 700;
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.35);
+            z-index: 200;
+            display: none;
+            animation: toastPop 0.3s ease forwards;
+        }
+
+        @keyframes toastPop {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .matrix-footer {
+            margin-top: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .matrix-footer span {
+            color: var(--matrix-green);
+            font-weight: 700;
+        }
+
+        @media (max-width: 600px) {
+            .cyber-terminal { padding: 1.4rem; border-radius: 18px; }
+            .main-title { font-size: 1.6rem; }
+            .studio-control-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrixCanvas"></canvas>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+
+    <main class="cyber-terminal">
+        <!-- Terminal Header -->
+        <header class="terminal-header">
+            <div class="header-title-row">
+                <div class="terminal-badge">⚡</div>
+                <h1 class="main-title">BLUESTREAM</h1>
+            </div>
+            <p class="terminal-sub">CYBER MATRIX 4K MEDIA & SLICE STUDIO</p>
+            <div class="telemetry-bar">
+                <span class="telemetry-pill"><span class="telemetry-dot"></span>SYS ONLINE</span>
+                <span class="telemetry-pill">4K ENGINE: ACTIVE</span>
+                <span class="telemetry-pill" id="deviceTag">DEVICE: PC NODE</span>
+            </div>
+        </header>
+
+        <!-- Matrix Search Bar -->
+        <div class="search-container">
+            <span class="search-prompt">&gt;_</span>
+            <input type="text" class="matrix-input" id="urlInput" placeholder="Paste YouTube link..." autocomplete="off">
+            <div class="input-tools">
+                <div class="matrix-spinner" id="spinner"></div>
+                <button class="btn-paste" id="btnPaste" onclick="pasteClipboard()">[PASTE]</button>
+            </div>
+        </div>
+
+        <!-- Media Hologram Card -->
+        <section class="media-hologram" id="mediaHologram">
+            <div class="thumb-box">
+                <span class="playlist-pill" id="playlistPill">PLAYLIST DETECTED</span>
+                <img src="" class="thumb-img" id="thumbImg" alt="Thumbnail">
+                <span class="duration-hud" id="durationHud">00:00</span>
+            </div>
+            <div class="hologram-info">
+                <h3 class="video-title" id="videoTitle">Video Title</h3>
+                <p class="video-creator" id="videoCreator">Creator Name</p>
+            </div>
+        </section>
+
+        <!-- ✂️ CYBER TRIMMER STUDIO WORKBENCH (NEW STUDIO DESIGN) -->
+        <section class="cyber-studio-deck" id="trimmerPanel">
+            <div class="studio-top-bar">
+                <div class="studio-badge">✂️ TIMELINE SLICE STUDIO</div>
+                <label class="switch-clip-mode">
+                    <input type="checkbox" id="trimToggle" class="clip-toggle-switch" checked>
+                    <span>Clip Mode</span>
+                </label>
+            </div>
+
+            <!-- Soundwave & Multi-Tick Timeline Visualizer -->
+            <div class="soundwave-timeline-container">
+                <div class="soundwave-pattern" id="soundwavePattern"></div>
+                <div class="active-slice-hud" id="timelineActiveSlice"></div>
+                <input type="range" id="rangeStart" class="range-scrubber-input" min="0" max="100" value="0" step="1">
+                <input type="range" id="rangeEnd" class="range-scrubber-input" min="0" max="100" value="100" step="1">
+            </div>
+
+            <!-- Quick Preset Clips Bar -->
+            <div class="preset-pills-row">
+                <button class="btn-preset" onclick="applyPreset(0, 30)">⚡ First 30s</button>
+                <button class="btn-preset" onclick="applyPreset(0, 60)">⚡ 1-Min Short</button>
+                <button class="btn-preset" onclick="applyPreset(30, 90)">⚡ 30s-90s Hook</button>
+                <button class="btn-preset" onclick="applyPreset(0, totalVideoSeconds)">⚡ Full Video</button>
+            </div>
+
+            <!-- Precision Cards with Micro-Adjusters -->
+            <div class="studio-control-cards">
+                <!-- Start Time Card -->
+                <div class="precision-card start-card">
+                    <div class="card-meta-label">
+                        <span>START TIME</span>
+                        <span id="startPercentLabel">0%</span>
+                    </div>
+                    <input type="text" class="digital-clock-field" id="inputStart" value="00:00:00">
+                    <div class="micro-steps-row">
+                        <button class="btn-micro" onclick="adjustTime('start', -5)">-5s</button>
+                        <button class="btn-micro" onclick="adjustTime('start', -1)">-1s</button>
+                        <button class="btn-micro" onclick="adjustTime('start', +1)">+1s</button>
+                        <button class="btn-micro" onclick="adjustTime('start', +5)">+5s</button>
+                    </div>
+                </div>
+
+                <!-- End Time Card -->
+                <div class="precision-card end-card">
+                    <div class="card-meta-label">
+                        <span>END TIME</span>
+                        <span id="endPercentLabel">100%</span>
+                    </div>
+                    <input type="text" class="digital-clock-field" id="inputEnd" value="00:00:00">
+                    <div class="micro-steps-row">
+                        <button class="btn-micro" onclick="adjustTime('end', -5)">-5s</button>
+                        <button class="btn-micro" onclick="adjustTime('end', -1)">-1s</button>
+                        <button class="btn-micro" onclick="adjustTime('end', +1)">+1s</button>
+                        <button class="btn-micro" onclick="adjustTime('end', +5)">+5s</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Savings & Duration Telemetry Meter -->
+            <div class="studio-savings-meter" id="savingsTelemetry">
+                <span id="labelClipDuration">⏱️ Clip Duration: 00:00</span>
+                <span id="labelBandwidthSaved">⚡ Streams ONLY Selected Seconds!</span>
+            </div>
+        </section>
+
+        <!-- Control Matrix: Mode Switcher & Resolution -->
+        <section class="control-matrix">
+            <div class="matrix-mode-tabs">
+                <button class="matrix-tab active" id="tabVideo" onclick="setMediaType('video')">🎬 MP4 VIDEO</button>
+                <button class="matrix-tab" id="tabAudio" onclick="setMediaType('audio')">🎵 320K MP3</button>
+            </div>
+
+            <div class="quality-box" id="qualityBox">
+                <select class="quality-hud-select" id="qualitySelect">
+                    <option value="">⭐ Best Quality (Highest Available 4K/HD)</option>
+                </select>
+            </div>
+        </section>
+
+        <!-- Master Launch Action -->
+        <button class="btn-matrix-launch" id="btnLaunch" onclick="triggerDownload()">
+            <span>⚡ EXECUTE DOWNLOAD</span>
+        </button>
+
+        <!-- Laser Progress HUD -->
+        <section class="progress-matrix-hud" id="progressHud">
+            <div class="hud-status-row">
+                <span class="hud-status-text" id="hudTitle">Connecting to stream...</span>
+                <span class="hud-pct-text" id="hudPercent">0%</span>
+            </div>
+            <div class="laser-track">
+                <div class="laser-fill" id="hudFill"></div>
+            </div>
+            <div class="hud-telemetry-stats">
+                <span id="hudSpeed">Speed: --</span>
+                <span id="hudEta">ETA: --</span>
+            </div>
+            <a href="#" class="direct-save-btn" id="directDownloadBtn" download>📥 SAVE MEDIA TO DEVICE</a>
+        </section>
+    </main>
+
+    <div class="matrix-toast" id="toast"></div>
+    <footer class="matrix-footer">MATRIX CYBER STUDIO V10 • BY <span>ANABRATA</span></footer>
+
+    <script>
+        // Matrix Digital Rain Engine
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        const chars = '01ABCDEF9876543210アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+        const charArray = chars.split('');
+        const fontSize = 15;
+        let columns = Math.floor(width / fontSize);
+        let drops = Array(columns).fill(1);
+
+        function resizeMatrix() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            columns = Math.floor(width / fontSize);
+            drops = Array(columns).fill(1);
+        }
+        window.addEventListener('resize', resizeMatrix);
+
+        function drawMatrixRain() {
+            ctx.fillStyle = 'rgba(2, 11, 5, 0.08)';
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.font = fontSize + 'px "Fira Code", monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = charArray[Math.floor(Math.random() * charArray.length)];
+                
+                if (Math.random() > 0.85) {
+                    ctx.fillStyle = '#ffffff';
+                } else if (Math.random() > 0.6) {
+                    ctx.fillStyle = '#00f0ff';
+                } else {
+                    ctx.fillStyle = '#00ff66';
+                }
+
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrixRain, 33);
+
+        // Generate visual soundwave pattern
+        const soundwavePattern = document.getElementById('soundwavePattern');
+        function initSoundwaves() {
+            soundwavePattern.innerHTML = '';
+            const barCount = 48;
+            for (let i = 0; i < barCount; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'wave-bar';
+                const h = Math.floor(Math.sin(i * 0.3) * 16 + 22 + Math.random() * 12);
+                bar.style.height = `${h}px`;
+                soundwavePattern.appendChild(bar);
+            }
+        }
+        initSoundwaves();
+
+        // App Elements
+        const urlInput = document.getElementById('urlInput');
+        const spinner = document.getElementById('spinner');
+        const mediaHologram = document.getElementById('mediaHologram');
+        const thumbImg = document.getElementById('thumbImg');
+        const videoTitle = document.getElementById('videoTitle');
+        const videoCreator = document.getElementById('videoCreator');
+        const durationHud = document.getElementById('durationHud');
+        const playlistPill = document.getElementById('playlistPill');
+        const tabVideo = document.getElementById('tabVideo');
+        const tabAudio = document.getElementById('tabAudio');
+        const qualityBox = document.getElementById('qualityBox');
+        const qualitySelect = document.getElementById('qualitySelect');
+        const btnLaunch = document.getElementById('btnLaunch');
+        const progressHud = document.getElementById('progressHud');
+        const hudTitle = document.getElementById('hudTitle');
+        const hudPercent = document.getElementById('hudPercent');
+        const hudFill = document.getElementById('hudFill');
+        const hudSpeed = document.getElementById('hudSpeed');
+        const hudEta = document.getElementById('hudEta');
+        const directDownloadBtn = document.getElementById('directDownloadBtn');
+        const deviceTag = document.getElementById('deviceTag');
+
+        // Studio Trimmer Elements
+        const trimmerPanel = document.getElementById('trimmerPanel');
+        const trimToggle = document.getElementById('trimToggle');
+        const rangeStart = document.getElementById('rangeStart');
+        const rangeEnd = document.getElementById('rangeEnd');
+        const timelineActiveSlice = document.getElementById('timelineActiveSlice');
+        const inputStart = document.getElementById('inputStart');
+        const inputEnd = document.getElementById('inputEnd');
+        const startPercentLabel = document.getElementById('startPercentLabel');
+        const endPercentLabel = document.getElementById('endPercentLabel');
+        const labelClipDuration = document.getElementById('labelClipDuration');
+        const labelBandwidthSaved = document.getElementById('labelBandwidthSaved');
+
+        let typingTimeout;
+        let activeMediaType = 'video';
+        let currentTaskId = null;
+        let pollTimer = null;
+        let isProcessing = false;
+        let totalVideoSeconds = 0;
+        let isPlaylist = false;
+
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobileDevice) {
+            deviceTag.textContent = 'DEVICE: MOBILE NODE';
+        }
+
+        function cleanString(str) {
+            if (!str) return '';
+            return String(str).replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '').trim();
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 3500);
+        }
+
+        async function pasteClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    urlInput.value = text.trim();
+                    analyzeInput();
+                }
+            } catch (err) {
+                showToast('📋 Use CTRL + V to Paste');
+            }
+        }
+
+        urlInput.addEventListener('input', () => {
+            clearTimeout(typingTimeout);
+            const val = urlInput.value.trim();
+            if (val.length > 6 && (val.includes('http://') || val.includes('https://') || val.includes('youtu'))) {
+                spinner.style.display = 'block';
+                typingTimeout = setTimeout(analyzeInput, 500);
+            }
+        });
+
+        function formatTime(sec) {
+            sec = Math.max(0, Math.floor(sec || 0));
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            if (h > 0) {
+                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+            return `00:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function parseTime(str) {
+            if (!str) return 0;
+            const p = str.trim().split(':').map(Number);
+            if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
+            if (p.length === 2) return p[0] * 60 + p[1];
+            if (p.length === 1) return p[0] || 0;
+            return 0;
+        }
+
+        function isPartialTrimActive() {
+            if (!trimToggle.checked || isPlaylist) return false;
+            const sVal = parseInt(rangeStart.value) || 0;
+            const eVal = parseInt(rangeEnd.value) || totalVideoSeconds;
+            return (sVal > 0 || (totalVideoSeconds > 0 && eVal < totalVideoSeconds));
+        }
+
+        function updateTimeline() {
+            let sVal = parseInt(rangeStart.value);
+            let eVal = parseInt(rangeEnd.value);
+
+            if (sVal > eVal) {
+                rangeStart.value = eVal;
+                sVal = eVal;
+            }
+
+            const min = parseInt(rangeStart.min) || 0;
+            const max = parseInt(rangeEnd.max) || 100;
+            const total = max - min || 1;
+
+            const leftPct = ((sVal - min) / total) * 100;
+            const widthPct = ((eVal - sVal) / total) * 100;
+
+            timelineActiveSlice.style.left = `${leftPct}%`;
+            timelineActiveSlice.style.width = `${widthPct}%`;
+
+            inputStart.value = formatTime(sVal);
+            inputEnd.value = formatTime(eVal);
+
+            startPercentLabel.textContent = `${Math.round(leftPct)}%`;
+            endPercentLabel.textContent = `${Math.round(((eVal - min) / total) * 100)}%`;
+
+            const clipLength = eVal - sVal;
+            labelClipDuration.textContent = `⏱️ Clip Duration: ${formatTime(clipLength)}`;
+            
+            if (totalVideoSeconds > 0) {
+                const savedPct = Math.max(0, Math.round((1 - (clipLength / totalVideoSeconds)) * 100));
+                labelBandwidthSaved.textContent = `⚡ Saves ~${savedPct}% Bandwidth & Space!`;
+            }
+
+            updateButtonUI();
+        }
+
+        rangeStart.addEventListener('input', updateTimeline);
+        rangeEnd.addEventListener('input', updateTimeline);
+
+        inputStart.addEventListener('change', () => {
+            const sec = parseTime(inputStart.value);
+            rangeStart.value = Math.min(sec, parseInt(rangeEnd.value));
+            updateTimeline();
+        });
+
+        inputEnd.addEventListener('change', () => {
+            const sec = parseTime(inputEnd.value);
+            rangeEnd.value = Math.max(sec, parseInt(rangeStart.value));
+            updateTimeline();
+        });
+
+        function adjustTime(target, delta) {
+            if (target === 'start') {
+                let cur = parseInt(rangeStart.value) + delta;
+                cur = Math.max(0, Math.min(cur, parseInt(rangeEnd.value)));
+                rangeStart.value = cur;
+            } else {
+                let cur = parseInt(rangeEnd.value) + delta;
+                cur = Math.max(parseInt(rangeStart.value), Math.min(cur, totalVideoSeconds));
+                rangeEnd.value = cur;
+            }
+            updateTimeline();
+        }
+
+        function applyPreset(startSec, endSec) {
+            if (totalVideoSeconds === 0) return;
+            rangeStart.value = Math.max(0, Math.min(startSec, totalVideoSeconds));
+            rangeEnd.value = Math.max(0, Math.min(endSec, totalVideoSeconds));
+            updateTimeline();
+            showToast(`✂️ Applied Range: ${formatTime(rangeStart.value)} - ${formatTime(rangeEnd.value)}`);
+        }
+
+        trimToggle.addEventListener('change', () => {
+            const active = trimToggle.checked;
+            inputStart.disabled = !active;
+            inputEnd.disabled = !active;
+            rangeStart.disabled = !active;
+            rangeEnd.disabled = !active;
+            trimmerPanel.style.opacity = active ? '1' : '0.45';
+            updateButtonUI();
+        });
+
+        function setMediaType(type) {
+            activeMediaType = type;
+            if (type === 'video') {
+                tabVideo.classList.add('active');
+                tabVideo.classList.remove('audio-mode');
+                tabAudio.classList.remove('active', 'audio-mode');
+                qualityBox.style.display = 'block';
+                btnLaunch.classList.remove('audio-mode');
+            } else {
+                tabAudio.classList.add('active', 'audio-mode');
+                tabVideo.classList.remove('active');
+                qualityBox.style.display = 'none';
+                btnLaunch.classList.add('audio-mode');
+            }
+            updateButtonUI();
+        }
+
+        function updateButtonUI() {
+            if (!urlInput.value.trim() || !mediaHologram.classList.contains('active')) return;
+
+            const isTrim = isPartialTrimActive();
+            const startT = inputStart.value;
+            const endT = inputEnd.value;
+
+            if (activeMediaType === 'video') {
+                if (isTrim) {
+                    btnLaunch.innerHTML = `<span>✂️ EXECUTE TRIMMED MP4 (${startT} - ${endT})</span>`;
+                } else {
+                    btnLaunch.innerHTML = `<span>⚡ EXECUTE FULL MP4 DOWNLOAD</span>`;
+                }
+            } else {
+                if (isTrim) {
+                    btnLaunch.innerHTML = `<span>✂️ EXECUTE TRIMMED MP3 (${startT} - ${endT})</span>`;
+                } else {
+                    btnLaunch.innerHTML = `<span>🎵 EXECUTE 320KBPS MP3 DOWNLOAD</span>`;
+                }
+            }
+        }
+
+        async function analyzeInput() {
+            const url = urlInput.value.trim();
+            if (!url) return;
+
+            spinner.style.display = 'block';
+            try {
+                const res = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const data = await res.json();
+                spinner.style.display = 'none';
+
+                if (data.error) {
+                    showToast('⚠️ ' + data.error);
+                    return;
+                }
+
+                thumbImg.src = data.thumbnail || '';
+                videoTitle.textContent = data.title || 'YouTube Media';
+                videoCreator.textContent = data.uploader || 'Creator';
+                durationHud.textContent = data.duration || '00:00';
+
+                isPlaylist = !!data.is_playlist;
+                totalVideoSeconds = data.duration_seconds || 0;
+
+                if (isPlaylist) {
+                    playlistPill.style.display = 'block';
+                    trimmerPanel.classList.remove('active');
+                    qualitySelect.innerHTML = '<option value="">All Videos (Best Quality)</option>';
+                } else {
+                    playlistPill.style.display = 'none';
+                    trimmerPanel.classList.add('active');
+
+                    rangeStart.min = 0;
+                    rangeStart.max = totalVideoSeconds;
+                    rangeStart.value = 0;
+
+                    rangeEnd.min = 0;
+                    rangeEnd.max = totalVideoSeconds;
+                    rangeEnd.value = totalVideoSeconds;
+
+                    trimToggle.checked = true;
+                    updateTimeline();
+
+                    qualitySelect.innerHTML = '<option value="">⭐ Best Quality (Highest Available 4K/HD)</option>';
+                    if (data.qualities && data.qualities.length > 0) {
+                        data.qualities.forEach(q => {
+                            const opt = document.createElement('option');
+                            opt.value = q;
+                            let label = `${q}p`;
+                            if (q >= 4320) label = `🎬 ${q}p (8K Ultra HD)`;
+                            else if (q >= 2160) label = `🎬 ${q}p (4K Ultra HD)`;
+                            else if (q >= 1440) label = `🎬 ${q}p (2K Quad HD)`;
+                            else if (q >= 1080) label = `🎬 ${q}p (Full HD 1080p)`;
+                            else if (q >= 720) label = `📺 ${q}p (HD 720p)`;
+                            else label = `📱 ${q}p (SD)`;
+                            opt.textContent = label;
+                            qualitySelect.appendChild(opt);
+                        });
+                    }
+                }
+
+                mediaHologram.classList.add('active');
+                btnLaunch.classList.add('ready');
+                updateButtonUI();
+                showToast('✅ Studio Stream Loaded!');
+            } catch (err) {
+                spinner.style.display = 'none';
+                showToast('⚠️ Matrix Server Offline');
+            }
+        }
+
+        async function triggerDownload() {
+            if (isProcessing) {
+                showToast('⚠️ Process running! Please wait.');
+                return;
+            }
+
+            const url = urlInput.value.trim();
+            if (!url) {
+                showToast('⚠️ Paste a YouTube URL first');
+                return;
+            }
+
+            isProcessing = true;
+            btnLaunch.classList.remove('ready');
+            btnLaunch.innerHTML = `<span>⏳ INITIALIZING MATRIX STREAM...</span>`;
+
+            const isTrim = isPartialTrimActive();
+            const startT = inputStart.value;
+            const endT = inputEnd.value;
+
+            progressHud.classList.add('active');
+            hudTitle.textContent = isTrim 
+                ? `✂️ Slicing Stream (${startT} to ${endT})...`
+                : `⚡ Downloading ${activeMediaType.toUpperCase()}...`;
+            
+            hudPercent.textContent = '0%';
+            hudFill.style.width = '0%';
+            hudSpeed.textContent = 'Connecting...';
+            hudEta.textContent = 'Calculating...';
+            directDownloadBtn.style.display = 'none';
+
+            const payload = {
+                url: url,
+                type: activeMediaType,
+                quality: qualitySelect.value || null,
+                trim_enabled: isTrim,
+                start_time: isTrim ? startT : null,
+                end_time: isTrim ? endT : null
+            };
+
+            try {
+                const res = await fetch('/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    showToast('⚠️ ' + data.error);
+                    resetLaunchState();
+                    return;
+                }
+
+                currentTaskId = data.task_id;
+                startPolling();
+            } catch (err) {
+                showToast('⚠️ Connection Error');
+                resetLaunchState();
+            }
+        }
+
+        function startPolling() {
+            clearInterval(pollTimer);
+            pollTimer = setInterval(async () => {
+                if (!currentTaskId) return;
+                try {
+                    const res = await fetch(`/progress/${currentTaskId}`);
+                    const data = await res.json();
+
+                    if (data.status === 'downloading' || data.status === 'processing') {
+                        const pct = data.progress || 0;
+                        hudFill.style.width = pct + '%';
+                        hudPercent.textContent = Math.round(pct) + '%';
+                        hudSpeed.textContent = cleanString(data.speed) ? `Speed: ${cleanString(data.speed)}` : 'Speed: --';
+                        hudEta.textContent = cleanString(data.eta) ? `ETA: ${cleanString(data.eta)}` : 'ETA: --';
+                        if (data.filename) {
+                            hudTitle.textContent = cleanString(data.filename);
+                        }
+                    } else if (data.status === 'completed') {
+                        clearInterval(pollTimer);
+                        hudFill.style.width = '100%';
+                        hudPercent.textContent = '100%';
+                        hudTitle.textContent = '🎉 Download Ready!';
+                        hudSpeed.textContent = 'Speed: Ready!';
+                        hudEta.textContent = 'ETA: 00:00';
+                        showToast('🎉 Download Complete!');
+
+                        if (data.download_url) {
+                            directDownloadBtn.href = data.download_url;
+                            directDownloadBtn.textContent = '📥 SAVE ' + (data.filename ? cleanString(data.filename).substring(0, 30) + '...' : 'FILE');
+                            directDownloadBtn.style.display = 'block';
+
+                            // Auto single-stream browser download
+                            const singleLink = document.createElement('a');
+                            singleLink.href = data.download_url;
+                            singleLink.setAttribute('download', data.filename || 'download');
+                            document.body.appendChild(singleLink);
+                            singleLink.click();
+                            document.body.removeChild(singleLink);
+                        }
+                        resetLaunchState();
+                    } else if (data.status === 'error') {
+                        clearInterval(pollTimer);
+                        hudTitle.textContent = '❌ Process Error';
+                        showToast('❌ ' + (data.error || 'Failed'));
+                        resetLaunchState();
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }, 800);
+        }
+
+        function resetLaunchState() {
+            isProcessing = false;
+            btnLaunch.classList.add('ready');
+            updateButtonUI();
+        }
+    </script>
+</body>
+</html>
